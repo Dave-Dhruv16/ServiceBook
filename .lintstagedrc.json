@@ -1,0 +1,8 @@
+{
+  "apps/frontend/**/*.{ts,tsx}": [
+    "npm run lint --workspace=apps/frontend"
+  ],
+  "apps/backend/**/*.{ts,tsx}": [
+    "bash -c 'npm run type-check --workspace=apps/backend'"
+  ]
+}

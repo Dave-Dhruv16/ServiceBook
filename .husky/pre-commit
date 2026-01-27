@@ -1,0 +1,11 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+npx lint-staged
+
+# Run builds
+echo "Building Frontend..."
+npm run build --workspace=apps/frontend
+
+echo "Building Backend..."
+npm run build --workspace=apps/backend

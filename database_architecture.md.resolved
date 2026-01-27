@@ -1,0 +1,126 @@
+# Efficient & Optimized Database Design
+**Target System**: PostgreSQL (Recommended for relational integrity + JSONB flexibility)
+
+## 1. 📊 Entity-Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    User ||--o{ ProviderProfile : "has (if provider)"
+    User ||--o{ Appointment : "books (as customer)"
+    User ||--o{ Review : "writes"
+
+    ProviderProfile ||--o{ Service : "offers"
+    ProviderProfile ||--o{ WorkingHour : "defines"
+    ProviderProfile ||--o{ BlockedSlot : "sets"
+    ProviderProfile ||--o{ Appointment : "fulfills"
+
+    Service ||--o{ Appointment : "included in"
+    
+    Appointment ||--|| Payment : "has"
+    Appointment ||--o{ Review : "receives"
+
+    User {
+        uuid id PK
+        string email UK
+        string password_hash
+        enum role "CUSTOMER | PROVIDER | ADMIN"
+        timestamp created_at
+    }
+
+    ProviderProfile {
+        uuid user_id PK, FK
+        string display_name
+        string bio
+        string location
+        string avatar_url
+        float rating_avg
+        int review_count
+        boolean is_verified
+        jsonb settings "notifications, theme, etc"
+    }
+
+    Service {
+        uuid id PK
+        uuid provider_id FK
+        string name
+        text description
+        decimal price
+        int duration_min
+        string category "Indexed"
+        boolean is_active
+    }
+
+    WorkingHour {
+        uuid id PK
+        uuid provider_id FK
+        int day_of_week "0-6"
+        time start_time
+        time end_time
+    }
+
+    BlockedSlot {
+        uuid id PK
+        uuid provider_id FK
+        date block_date
+        time start_time "Optional (null=full day)"
+        time end_time
+    }
+
+    Appointment {
+        uuid id PK
+        uuid customer_id FK
+        uuid provider_id FK
+        uuid service_id FK
+        timestamp start_time "Indexed"
+        timestamp end_time "Indexed"
+        enum status "PENDING | CONFIRMED | CANCELLED | COMPLETED"
+        decimal total_price
+        text notes
+    }
+```
+
+## 2. 🏗️ Detailed Schema Specifications
+
+### A. Users & Auth
+We split `User` (Auth) from [ProviderProfile](file:///home/codezeros/appointment%20booking/apps/frontend/src/app/%28provider%29/provider/profile/page.tsx#10-113) (Public Info) to keep the auth table lean and fast.
+- **Optimization**: `email` is indexed unique. `role` is an enum for storage efficiency.
+
+### B. Provider Availability (The "Hard" Part)
+Instead of storing "free slots", we store **Rules** (`WorkingHour`) and **Exceptions** (`BlockedSlot`).
+- **Query Strategy**: To find availability for "March 15th":
+  1. Check `WorkingHour` for `day_of_week = Friday`.
+  2. Subtract any `BlockedSlot` for that specific date.
+  3. Subtract any existing [Appointment](file:///home/codezeros/appointment%20booking/apps/frontend/src/constants/index.ts#98-108) overlapping that time.
+  *This is O(1) storage vs O(N) storage of generating empty slots.*
+
+### C. Services
+- **Optimization**: `category` should be indexed for the "Search Services" page filters.
+- **Optimization**: `price` and `duration` stored as integers/decimals to allow range queries (e.g., "Price < $100").
+
+### D. Appointments (Transactional Core)
+- **Optimization**: **Composite Index** on `[provider_id, start_time]` is CRITICAL for collision detection (preventing double bookings).
+- **Optimization**: `status` index for generic "My Upcoming Bookings" queries.
+
+## 3. 🚀 Performance Optimization Strategy
+
+### 🔎 Indexing Strategy
+| Table | Columns | Use Case |
+| :--- | :--- | :--- |
+| `User` | `email` | Login lookup |
+| [Service](file:///home/codezeros/appointment%20booking/apps/frontend/src/constants/index.ts#144-154) | `provider_id` | "View Provider Services" page |
+| [Service](file:///home/codezeros/appointment%20booking/apps/frontend/src/constants/index.ts#144-154) | `category, price` | "Search & Filter" page |
+| [Appointment](file:///home/codezeros/appointment%20booking/apps/frontend/src/constants/index.ts#98-108) | `customer_id, status` | Customer Dashboard |
+| [Appointment](file:///home/codezeros/appointment%20booking/apps/frontend/src/constants/index.ts#98-108) | `provider_id, start_time` | Availability Calculation |
+
+### ⚡ Caching (Redis)
+*Recommended for High-Scale:*
+1.  **Provider Profiles**: Cache [ProviderProfile](file:///home/codezeros/appointment%20booking/apps/frontend/src/app/%28provider%29/provider/profile/page.tsx#10-113) + `Service[]` by `username/id`. Invalidate only on profile update.
+2.  **Availability**: Cache calculated "Available Slots" for the next 7 days per provider. Invalidate immediately on new Booking.
+
+### 📦 JSONB Usage
+Use `jsonb` column on [ProviderProfile](file:///home/codezeros/appointment%20booking/apps/frontend/src/app/%28provider%29/provider/profile/page.tsx#10-113) for `metadata`.
+- Allows adding fields like `instagram_handle`, `website_url`, `certifications` without running DB migrations every time.
+
+## 4. 🔮 Future Proofing
+- **Multi-Currency**: [Appointment](file:///home/codezeros/appointment%20booking/apps/frontend/src/constants/index.ts#98-108) table stores `currency` code if you expand globally.
+- **Timezones**: ALways store `start_time` and `end_time` in **UTC**. Convert to local time on the Frontend using the Provider's timezone setting.
