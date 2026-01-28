@@ -1,8 +1,8 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { PROVIDER_LINKS } from "@/constants";
+import { CUSTOMER_LINKS } from "@/constants";
 
-export default function ProviderLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ export default function ProviderLayout({
     <div className="min-h-screen bg-muted/20">
       <Navbar />
       <div className="flex pt-16">
-        <Sidebar links={PROVIDER_LINKS} />
+        <Sidebar links={CUSTOMER_LINKS} />
         <main className="flex-1 p-6 md:p-8 overflow-y-auto h-[calc(100vh-4rem)]">
           {children}
         </main>

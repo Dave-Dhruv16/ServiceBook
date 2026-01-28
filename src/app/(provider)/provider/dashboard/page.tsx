@@ -1,10 +1,13 @@
-"use client"
+"use client";
 
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Calendar, DollarSign, TrendingUp, CheckCircle, XCircle } from "lucide-react";
-import { MOCK_APPOINTMENTS, CURRENCY } from "@/constants";
+import { MOCK_APPOINTMENTS, CURRENCY, ROLES } from "@/constants";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import ProtectedRoute from "@/components/auth/protected-route";
 
 const data = [
   { name: 'Mon', total: 1500 },
@@ -17,58 +20,63 @@ const data = [
 ];
 
 export default function ProviderDashboardPage() {
-  const myAppointments = MOCK_APPOINTMENTS; // Using all mock apps for demo purposes as "my" appointments
+  const { user } = useAuth();
+  const myAppointments = MOCK_APPOINTMENTS; 
   const upcomingCount = myAppointments.filter(a => a.status === "upcoming").length;
   const earnings = myAppointments.reduce((acc, curr) => acc + curr.price, 0);
 
+  // Greeting Logic
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 12 && hour < 17) return "Good afternoon";
+    if (hour >= 17) return "Good evening";
+    return "Good morning";
+  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [greeting] = useState(() => getGreeting());
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <ProtectedRoute allowedRoles={[ROLES.PROVIDER]}>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground">Track your business performance and upcoming schedule.</p>
+        <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+           {greeting}, {user?.firstName || "Provider"}!
+        </h1>
+        <p className="text-muted-foreground mt-1">Track your business performance and upcoming schedule.</p>
       </div>
 
+      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="shadow-sm hover:shadow-md transition-all border-none bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{CURRENCY}{earnings}</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-all border-none bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Bookings</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{upcomingCount}</div>
-            <p className="text-xs text-muted-foreground">+5 new since yesterday</p>
-          </CardContent>
-        </Card>
-         <Card className="shadow-sm hover:shadow-md transition-all border-none bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">+2 since last week</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-all border-none bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">View Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4.8%</div>
-            <p className="text-xs text-muted-foreground">+1.2% from last week</p>
-          </CardContent>
-        </Card>
+        {[
+            { title: "Total Revenue", icon: DollarSign, value: `${CURRENCY}${earnings}`, sub: "+20.1% from last month", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+            { title: "Upcoming Bookings", icon: Calendar, value: upcomingCount, sub: "+5 new since yesterday", color: "text-blue-500", bg: "bg-blue-500/10" },
+            { title: "Total Clients", icon: Users, value: "24", sub: "+2 since last week", color: "text-purple-500", bg: "bg-purple-500/10" },
+            { title: "View Rate", icon: TrendingUp, value: "4.8%", sub: "+1.2% from last week", color: "text-orange-500", bg: "bg-orange-500/10" }
+        ].map((stat, i) => (
+             <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer">
+               <CardContent className="p-6 flex items-center justify-between">
+                 <div>
+                   <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                   {isLoading ? (
+                     <div className="h-8 w-16 bg-muted animate-pulse rounded mt-1" />
+                   ) : (
+                     <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
+                   )}
+                   <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
+                 </div>
+                 <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.bg}`}>
+                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                 </div>
+               </CardContent>
+             </Card>
+        ))}
       </div>
 
       {/* Revenue Chart Section */}
@@ -171,6 +179,7 @@ export default function ProviderDashboardPage() {
               </CardContent>
            </Card>
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

@@ -13,6 +13,18 @@ export const NAV_LINKS = [
   { href: "/how-it-works", label: "How it Works" },
 ];
 
+export const ROLES = {
+  ADMIN: "ADMIN",
+  PROVIDER: "PROVIDER",
+  CUSTOMER: "CUSTOMER",
+} as const;
+
+export const DASHBOARD_ROUTES = {
+  [ROLES.ADMIN]: "/admin/dashboard",
+  [ROLES.PROVIDER]: "/provider/dashboard",
+  [ROLES.CUSTOMER]: "/customer/dashboard",
+} as const;
+
 export interface Provider {
   id: string;
   name: string;
@@ -78,23 +90,31 @@ export const MOCK_PROVIDERS: Provider[] = [
 ];
 
 export const PROVIDER_LINKS = [
-  { href: "/provider", label: "Dashboard", icon: "LayoutDashboard" },
-  { href: "/provider/appointments", label: "Appointments", icon: "Calendar" },
-  { href: "/provider/services", label: "Services", icon: "Briefcase" },
-  { href: "/provider/availability", label: "Availability", icon: "Clock" },
-  { href: "/provider/blocked-dates", label: "Blocked Dates", icon: "ShieldAlert" },
-  { href: "/provider/reviews", label: "Reviews", icon: "Users" },
-  { href: "/provider/analytics", label: "Analytics", icon: "BarChart" },
-  { href: "/provider/profile", label: "Profile", icon: "Settings" },
+  { href: DASHBOARD_ROUTES.PROVIDER, label: "Dashboard", icon: "LayoutDashboard" },
+  { href: `${DASHBOARD_ROUTES.PROVIDER}/appointments`, label: "Appointments", icon: "Calendar" },
+  { href: `${DASHBOARD_ROUTES.PROVIDER}/services`, label: "Services", icon: "Briefcase" },
+  { href: `${DASHBOARD_ROUTES.PROVIDER}/availability`, label: "Availability", icon: "Clock" },
+  { href: `${DASHBOARD_ROUTES.PROVIDER}/blocked-dates`, label: "Blocked Dates", icon: "ShieldAlert" },
+  { href: `${DASHBOARD_ROUTES.PROVIDER}/reviews`, label: "Reviews", icon: "Users" },
+  { href: `${DASHBOARD_ROUTES.PROVIDER}/analytics`, label: "Analytics", icon: "BarChart" },
+  { href: `${DASHBOARD_ROUTES.PROVIDER}/profile`, label: "Profile", icon: "Settings" },
 ];
 
 export const ADMIN_LINKS = [
-  { href: "/admin", label: "Overview", icon: "LayoutDashboard" },
-  { href: "/admin/providers", label: "Providers", icon: "Briefcase" },
-  { href: "/admin/users", label: "Users", icon: "Users" },
-  { href: "/admin/appointments", label: "All Appointments", icon: "Calendar" },
-  { href: "/admin/reviews", label: "Reviews", icon: "ShieldAlert" },
-  { href: "/admin/settings", label: "Settings", icon: "Settings" },
+  { href: DASHBOARD_ROUTES.ADMIN, label: "Overview", icon: "LayoutDashboard" },
+  { href: `${DASHBOARD_ROUTES.ADMIN}/providers`, label: "Providers", icon: "Briefcase" },
+  { href: `${DASHBOARD_ROUTES.ADMIN}/users`, label: "Users", icon: "Users" },
+  { href: `${DASHBOARD_ROUTES.ADMIN}/appointments`, label: "All Appointments", icon: "Calendar" },
+  { href: `${DASHBOARD_ROUTES.ADMIN}/reviews`, label: "Reviews", icon: "ShieldAlert" },
+  { href: `${DASHBOARD_ROUTES.ADMIN}/settings`, label: "Settings", icon: "Settings" },
+];
+
+export const CUSTOMER_LINKS = [
+  { href: DASHBOARD_ROUTES.CUSTOMER, label: "Dashboard", icon: "LayoutDashboard" },
+  { href: `${DASHBOARD_ROUTES.CUSTOMER}/appointments`, label: "My Bookings", icon: "Calendar" },
+  { href: `${DASHBOARD_ROUTES.CUSTOMER}/profile`, label: "Profile", icon: "User" },
+  { href: "/services", label: "Find Services", icon: "Search" },
+  { href: "/providers", label: "Find Providers", icon: "Users" },
 ];
 
 export interface Appointment {

@@ -1,0 +1,78 @@
+"use client";
+
+
+import { ROLES, DASHBOARD_ROUTES } from "@/constants";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+interface AuthContextType {
+  user: any | null;
+  token: string | null;
+  login: (token: string, user: any) => void;
+  logout: () => void;
+  isLoading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<any | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check local storage on mount
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      setToken(storedToken); // eslint-disable-line react-hooks/set-state-in-effect
+      setUser(JSON.parse(storedUser));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = (newToken: string, newUser: any) => {
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
+
+    // Redirect based on role
+    switch (newUser.role) {
+      case ROLES.PROVIDER:
+        router.push(DASHBOARD_ROUTES.PROVIDER);
+        break;
+      case ROLES.ADMIN:
+        router.push(DASHBOARD_ROUTES.ADMIN);
+        break;
+      case ROLES.CUSTOMER:
+      default:
+        router.push(DASHBOARD_ROUTES.CUSTOMER);
+        break;
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
+    router.push("/login");
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}

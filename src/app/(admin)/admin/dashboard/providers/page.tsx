@@ -79,7 +79,8 @@ export default function AdminProvidersPage() {
           <Card key={provider.id}>
             <CardContent className="p-6 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                 <img 
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
                     src={provider.image} 
                     alt={provider.name} 
                     className="h-10 w-10 rounded-full object-cover"

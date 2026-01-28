@@ -1,4 +1,6 @@
+import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { ADMIN_LINKS } from "@/constants";
 
 export default function AdminLayout({
   children,
@@ -6,15 +8,11 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-muted/20">
-      <div className="hidden md:block">
-        <Sidebar role="admin" />
-      </div>
-      <div className="flex-1 flex flex-col overflow-auto">
-        <header className="h-14 border-b bg-background flex items-center px-6 sticky top-0 z-10">
-          <h2 className="font-semibold">Admin Portal</h2>
-        </header>
-        <main className="p-6">
+    <div className="min-h-screen bg-muted/20">
+      <Navbar />
+      <div className="flex pt-16">
+        <Sidebar links={ADMIN_LINKS} />
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto h-[calc(100vh-4rem)]">
           {children}
         </main>
       </div>

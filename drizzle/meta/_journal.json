@@ -8,6 +8,13 @@
       "when": 1769518446897,
       "tag": "0000_brainy_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769579901160,
+      "tag": "0001_thick_abomination",
+      "breakpoints": true
     }
   ]
 }

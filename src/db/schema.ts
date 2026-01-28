@@ -8,6 +8,8 @@ import { relations, sql } from "drizzle-orm";
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   role: varchar("role", { length: 50, enum: ["CUSTOMER", "PROVIDER", "ADMIN"] }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
